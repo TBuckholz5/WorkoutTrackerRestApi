@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "identityapp1": {
+      "connectionInfo": "App registration: Trent Buckholz, Tenant: WorkoutTracker (TrialTenantlAQj8h3D.onmicrosoft.com - Microsoft Entra External ID)",
+      "type": "identityapp.default"
+    }
+  }
+}
