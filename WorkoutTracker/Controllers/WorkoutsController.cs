@@ -54,6 +54,16 @@ namespace WorkoutTracker.Controllers
             {
                 return BadRequest();
             }
+            // Validate exercise type.
+            foreach (Exercise exercise in workout.Exercises)
+            {
+                ExerciseType? foundExercise = await _db_context.ExerciseTypes
+                    .FirstOrDefaultAsync(x => x.Name == exercise.Name);
+                if (foundExercise == null)
+                {
+                    return BadRequest($"Exercise {exercise.Name} is not a valid ExerciseType!");
+                }
+            }
 
             _db_context.Entry(workout).State = EntityState.Modified;
 
@@ -85,6 +95,16 @@ namespace WorkoutTracker.Controllers
             if (owner == null)
             {
                 return BadRequest();
+            }
+            // Validate exercise type.
+            foreach (Exercise exercise in workout.Exercises)
+            {
+                ExerciseType? foundExercise = await _db_context.ExerciseTypes
+                    .FirstOrDefaultAsync(x => x.Name == exercise.Name);
+                if (foundExercise == null)
+                {
+                    return BadRequest($"Exercise {exercise.Name} is not a valid ExerciseType!");
+                }
             }
             workout.Owner = owner;
             _db_context.Workouts.Add(workout);

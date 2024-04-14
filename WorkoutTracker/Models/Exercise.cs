@@ -8,8 +8,8 @@ namespace WorkoutTracker.Models
         [Required]
         public required string Name { get; set; }
         [Required]
-        public required List<int> reps { get; set; }
+        public required List<int> Reps { get; set; }
         [Required]
-        public required List<float> weights { get; set; }
+        public required List<float> Weights { get; set; }
     }
 }
