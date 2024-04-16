@@ -9,16 +9,9 @@ namespace WorkoutTracker.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        protected readonly UserManager<IdentityUser> _userManager;
 
-        public AuthController(UserManager<IdentityUser> userManager)
+        public AuthController()
         {
-            _userManager = userManager;
-        }
-
-        protected string? GetCurrentUser()
-        {
-            return _userManager.GetUserId(User);
         }
 
         // POST: /logout
