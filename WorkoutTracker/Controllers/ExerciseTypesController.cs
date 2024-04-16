@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkoutTracker.Data;
+using WorkoutTracker.DTO;
 using WorkoutTracker.Models;
 
 namespace WorkoutTracker.Controllers
@@ -14,24 +17,28 @@ namespace WorkoutTracker.Controllers
     {
         private readonly AppDbContext _dbContext;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IMapper _mapper;
 
-        public ExerciseTypesController(AppDbContext dbContext, UserManager<IdentityUser> userManager)
+        public ExerciseTypesController(AppDbContext dbContext, UserManager<IdentityUser> userManager, IMapper mapper)
         {
             _dbContext = dbContext;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         // GET: api/ExerciseTypes
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ExerciseType>>> GetExerciseTypes()
+        public async Task<ActionResult<IEnumerable<ExerciseTypeDto>>> GetExerciseTypes()
         {
             return await _dbContext.ExerciseTypes
-                .Where(exerciseType => exerciseType.Owner == _userManager.GetUserId(User)).ToListAsync();
+                .Where(exerciseType => exerciseType.Owner == _userManager.GetUserId(User))
+                .ProjectTo<ExerciseTypeDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
 
         // GET: api/ExerciseTypes/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<ExerciseType>> GetExerciseType(int id)
+        public async Task<ActionResult<ExerciseTypeDto>> GetExerciseType(int id)
         {
             var exerciseType = await _dbContext.ExerciseTypes.FindAsync(id);
 
@@ -45,24 +52,29 @@ namespace WorkoutTracker.Controllers
                 return BadRequest();
             }
 
-            return exerciseType;
+            return _mapper.Map<ExerciseTypeDto>(exerciseType);
         }
 
         // PUT: api/ExerciseTypes/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutExerciseType(int id, ExerciseType exerciseType)
+        public async Task<IActionResult> PutExerciseType(int id, ExerciseTypeDto exerciseTypeDto)
         {
-            if (id != exerciseType.Id)
+            ExerciseType? exerciseType = await _dbContext.ExerciseTypes.FindAsync(id);
+            if (exerciseType == null)
             {
-                return BadRequest();
+                return NotFound();
             }
             if (exerciseType.Owner != _userManager.GetUserId(User))
             {
                 return BadRequest();
             }
 
-            _dbContext.Entry(exerciseType).State = EntityState.Modified;
+            ExerciseType newExerciseType = _mapper.Map<ExerciseType>(exerciseTypeDto);
+            newExerciseType.Id = id;
+            newExerciseType.Owner = exerciseType.Owner;
+
+            _dbContext.Entry(newExerciseType).State = EntityState.Modified;
 
             try
             {
@@ -86,18 +98,21 @@ namespace WorkoutTracker.Controllers
         // POST: api/ExerciseTypes
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<ExerciseType>> PostExerciseType(ExerciseType exerciseType)
+        public async Task<ActionResult<ExerciseTypeDto>> PostExerciseType(ExerciseTypeDto postExerciseTypeDto)
         {
             string? owner = _userManager.GetUserId(User);
             if (owner == null)
             {
                 return BadRequest();
             }
+            ExerciseType exerciseType = _mapper.Map<ExerciseType>(postExerciseTypeDto);
             exerciseType.Owner = owner;
             _dbContext.ExerciseTypes.Add(exerciseType);
             await _dbContext.SaveChangesAsync();
 
-            return CreatedAtAction("GetExerciseType", new { id = exerciseType.Id }, exerciseType);
+            postExerciseTypeDto.Id = exerciseType.Id;
+
+            return CreatedAtAction("GetExerciseType", new { id = exerciseType.Id }, postExerciseTypeDto);
         }
 
         // DELETE: api/ExerciseTypes/5
